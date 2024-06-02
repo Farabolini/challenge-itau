@@ -1,0 +1,70 @@
+
+version: '3.7'
+
+services:
+
+  app:
+    hostname: challenge-itau
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: challenge-itau:latest
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      wiremock:
+        condition: service_started
+    networks:
+      - challenge-itau-network
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/challenge-itau
+      REDIS_ADDRESS: redis:6379
+      WIREMOCK_HOST: http://wiremock:8080
+
+  db:
+    hostname: postgres
+    image: postgres:alpine
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "challenge-itau" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    restart: always
+    environment:
+      POSTGRES_USER: challenge-itau
+      POSTGRES_PASSWORD: challenge-itau
+      POSTGRES_DB: challenge-itau
+    ports:
+      - "5432:5432"
+    networks:
+      - challenge-itau-network
+
+  redis:
+    hostname: redis
+    image: bitnami/redis:7.2.5
+    environment:
+      ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - "6379:6379"
+    networks:
+      - challenge-itau-network
+
+  wiremock:
+    image: wiremock/wiremock:3.6.0
+    ports:
+      - "9090:8080"
+    volumes:
+      - ./wiremock/mappings:/home/wiremock/mappings
+    networks:
+      - challenge-itau-network
+
+networks:
+  challenge-itau-network:
+    driver: bridge

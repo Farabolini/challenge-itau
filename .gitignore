@@ -1,0 +1,25 @@
+#Gradle
+/.gradle/
+
+#Build
+/build
+/classes
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+#IntelliJ
+/.idea/
+/out
+*.iml
+
+#MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+#Log files
+*.log
